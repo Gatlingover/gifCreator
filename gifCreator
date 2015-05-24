@@ -1,0 +1,67 @@
+#!/usr/bin/python
+
+import sys, time, os
+from subprocess import call
+import glob
+
+class Gif():
+    def __init__(self):
+        """sets up gif object with name and path."""
+        self.name = "gifCreation-" + time.strftime("%Y-%d-%m-%H-%M")
+        self.path = "~/Pictures/Gifs/" + self.name + ".gif"
+        self.source = sorted(glob.glob('*.png'))
+    def normal(self, res):
+        """The actual creation of a normal GIF. Takes a resolution as argument. Uses convert from ImageMagick"""
+        command = 'convert -delay 5 -loop 0 -resize ' + str(res) + ' -coalesce -layers OptimizePlus ' + ' '.join(self.source) + ' ~/Pictures/Gifs/' + self.name + '.gif'
+        call(command, shell = True)
+    def eternal(self, res):
+        """Creates a gif that goes back and forth in a loop eternally"""
+        second_list = list(reversed(self.source[1:-1]))
+        command = 'convert -delay 5 -loop 0 -resize ' + str(res) + ' -coalesce -layers OptimizePlus ' + ' '.join(self.source + second_list) + ' ~/Pictures/Gifs/' + self.name + '.gif'
+        call(command, shell = True)
+    def backwards(self, res):
+        """Creates a gif that goes backwards"""
+        self.source = list(reversed(self.source))
+        command = 'convert -delay 5 -loop 0 -resize ' + str(res) + ' -coalesce -layers OptimizePlus ' + ' '.join(self.source) + ' ~/Pictures/Gifs/' + self.name + '.gif'
+        call(command, shell=True)
+    def checkSize(self):
+        """Checks size of GIF file and returns it"""
+        #formatted floating point so it shows only two first decimals.
+        size = float("{0:.2f}".format(os.path.getsize(os.path.expanduser(self.path)) / (1024*1024.0))) 
+        return(size)
+
+def Creator(res, style):
+    """A function that creates gif objects"""
+    try:
+        limit = int(sys.argv[3])
+    except:
+        limit = 3
+    gif = Gif()
+    if style == 'eternal':
+        gif.eternal(res)
+    elif style == 'backwards':
+        gif.backwards(res)
+    else:
+        gif.normal(res)
+    if gif.checkSize() > limit:
+        print("Gif size " + str(gif.checkSize()) + "MB, but exceded your " + str(limit) + " MB limit. I'll try again")
+        os.remove(os.path.expanduser(gif.path))
+        Creator(str(int((int(res)*0.80))), style)
+    else:
+        print("Your gif was generated succesfully and can be found at " + gif.path + " with a resoluton of " + res + "px and a size of " + str(gif.checkSize()) + " MB")
+
+try:
+    res = str(sys.argv[2])
+except:
+    res = str(500)
+
+try:
+    style = str(sys.argv[1])
+except:
+    style = 'normal'
+
+if glob.glob('*.png'):
+    Creator(res, style)
+else:
+    print("There are no PNG files for me to make gifs with :(")
+
