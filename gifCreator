@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+#Created by Joaquin L. Pereyra, github.com/joaquinlpereyra/gifCreator
+
 import sys, time, os, glob, argparse
 from subprocess import call
 
