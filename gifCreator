@@ -107,11 +107,6 @@ def Creator(res, style, limit, noaprox, tolerance):
 
 def run():
     """Checks for existance of more than 1 PNG file, parses command line arguments, sets up variable names, print info to user"""
-    try:
-        glob.glob('*.png')[1]
-    except:
-        print("Looks like there are no sufficient PNG files to work here. I need at least two.")
-        sys.exit(1)
     parser = argparse.ArgumentParser(description='Creates animated gif files using as a source all PNG found in the current directory.')
     parser.add_argument('-r', '--res', default=500, help='Sets the resolution for the widest border of the gif. If blank is set to 500')
     parser.add_argument('-s', '--style', default='normal', choices=['normal', 'eternal', 'backwards'], help='ETERNAL gifs loops backs and forth. BACKWARDS gif starts at the end of the file list. Defaults to NORMAL')
@@ -128,6 +123,11 @@ def run():
         strAprox = 'FALSE'
     else:
         strAprox = 'TRUE'
+    try:
+        glob.glob('*.png')[1]
+    except:
+        print("Looks like there are no sufficient PNG files to work here. I need at least two.")
+        sys.exit(1)
     print("Creating a gif for you with the following settings: \n STYLE: " + style + "\n RESOLUTION: " + str(res) + "\n SIZE LIMIT: " + str(limit) + "\n TOLERANCE: " + str(int(float(tolerance*-100)+100)) + '% \n APROXIMATION IS: ' + strAprox)
     Creator(res, style, limit, noaprox, tolerance)
 
