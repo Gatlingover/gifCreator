@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-<<<<<<< HEAD
 # By Joaquin L. Pereyra. https://github.com/joaquinlpereyra/gifCreator
 
 import sys
@@ -8,11 +7,6 @@ import time
 import os
 import glob
 import argparse
-=======
-#Created by Joaquin L. Pereyra, github.com/joaquinlpereyra/gifCreator
-
-import sys, time, os, glob, argparse
->>>>>>> 8a2a96b029649cbb53572f5d52747ed222fe342b
 from subprocess import call
 
 # creates a gif file using all png found in directory. gif can have several
