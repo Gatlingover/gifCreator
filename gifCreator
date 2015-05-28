@@ -7,7 +7,7 @@ import time
 import os
 import glob
 import argparse
-from decimal import Decimal, getcontext
+from decimal import Decimal
 from subprocess import call
 
 # creates a gif file using all png found in directory. gif can have several
@@ -210,7 +210,6 @@ def run():
     noaprox = arguments.noaprox
     tolerance = (100-arguments.tolerance)/100
     skip = (arguments.skip+1)
-    getcontext().prec = 2
     if noaprox:
         straprox = 'FALSE'
     else:
