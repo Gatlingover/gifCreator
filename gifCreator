@@ -1,24 +1,25 @@
 #!/usr/bin/python
 
-# By Joaquin L. Pereyra. https://github.com/joaquinlpereyra/gifCreator
+# By Joaquin L. Pereyra. https://github.com/joaquinlpereyra/gifcreator
 
 import sys
 import time
 import os
 import glob
 import argparse
+from decimal import Decimal, getcontext
 from subprocess import call
 
 # creates a gif file using all png found in directory. gif can have several
-# options and styles. run 'python gifCreator --help' for an outline or check
+# options and styles. run 'python gifcreator --help' for an outline or check
 # the bottom of the script.
 
 # program is written from top to bottom. to go with the flow, you should start
 # at bottom
 #
 # basic outline: run() reads options from command line and checks for PNG
-# existance. Creator() instruct Gif() class how to create the gif and call
-# Gif().checkSize(). limitEnforcer() uses Gif().checkSize() to compare the
+# existance. creator() instruct Gif() class how to create the gif and call
+# Gif().checksize(). limit_enforcer() uses Gif().checksize() to compare the
 # limit and the actual size. following procedure depends on command line
 # argument 'aprox'. if aprox is true, the program will try to aproximate the
 # limit as much as it can within the given limit and exit when is there
@@ -38,45 +39,42 @@ class Gif():
     def command(self, source):
         """changes command according to source"""
 
-        self.command = ('convert -delay 5 -loop 0 -resize ' + str(self.res) +
-                        ' -coalesce -layers OptimizePlus ' +
-                        str(' '.join(source)) + ' ~/Pictures/Gifs/' +
-                        self.name + '.gif')
+        argument = ('convert -delay 5 -loop 0 -resize ' + str(self.res) +
+                    ' -coalesce -layers OptimizePlus ' +
+                    str(' '.join(source)) + ' ~/Pictures/Gifs/' +
+                    self.name + '.gif')
+        return(argument)
 
     def normal(self):
         """Creates a normal gif file"""
-        self.command(self.source)
-        call(self.command, shell=True)
+        call(self.command(self.source), shell=True)
 
     def eternal(self):
         """Creates a gif that goes back and forth in a loop eternally"""
         second_list = list(reversed(self.source[1:]))
         self.source = list(self.source + second_list)
-        self.command(self.source)
-        call(self.command, shell=True)
+        call(self.command(self.source), shell=True)
 
     def backwards(self):
         """Creates a gif that goes backwards"""
         self.source = list(reversed(self.source))
-        self.command(self.source)
-        call(self.command, shell=True)
+        call(self.command(self.source), shell=True)
 
-    def checkSize(self):
+    def checksize(self):
         """Checks size of GIF file and returns it"""
         # formatted floating point so it shows only two first decimals.
-        size = float("{0:.2f}".format(
-                        os.path.getsize(os.path.expanduser(self.path)) /
-                        (1024*1024.0)))
-        return(size)
+        _file = os.path.expanduser(self.path)
+        size = os.path.getsize(_file)
+        size_mb = Decimal(size) / (1024*1024)
+        return(size_mb)
 
 
-def limitEnforcer(filesize, limit, tolerance):
+def limit_enforcer(filesize, limit, tolerance):
     """the gatekeeper of our dear limit's castle:
     will inform about condition of filesizes trying to pass the door
     """
-    if filesize < limit and filesize > limit*tolerance or filesize == limit:
-        # if the filesize is smaller than the limit but between our tolerance
-        # or if filesize is equal to the limit gatekeeper says no problem!
+    if limit*tolerance < filesize <= limit:
+        # if filesize is between our limit and our tolerance
         return 0
     elif filesize > limit:
         if filesize < limit*1.40:
@@ -92,14 +90,14 @@ def limitEnforcer(filesize, limit, tolerance):
         return 2
     else:
         # just in case, y'know
-        print(
-            "There's been a problem here",
-            "Please report a bug with the limitEnforcer() function")
-        sys.exit(1)
+        raise RuntimeError('There was a problem here.',
+                           'The program entered an else clause it is not',
+                           'supposed to \n. Please report a bug with the',
+                           'limit_enforcer() function.')
 
 
-def Creator(res, style, limit, noaprox, tolerance, skip):
-    """Instructs Gif() how to create the object and calls limitEnforcer()"""
+def creator(res, style, limit, noaprox, tolerance, skip):
+    """Instructs Gif() how to create the object and calls limit_enforcer()"""
     gif = Gif(res, skip)
     if style == 'eternal':
         gif.eternal()
@@ -107,14 +105,14 @@ def Creator(res, style, limit, noaprox, tolerance, skip):
         gif.backwards()
     else:
         gif.normal()
-    filesize = gif.checkSize()
-    test = limitEnforcer(filesize, limit, tolerance)
+    filesize = gif.checksize()
+    test = limit_enforcer(filesize, limit, tolerance)
     if test == 0 or (noaprox and test == 2):
         # sizefile is just allright acording to our dear gatekeeper
         print(
             "Your gif was generated succesfully. \n PATH: " + gif.path + "\n",
             "RESOLUTION: " + str(res) + "px \n",
-            "SIZE: " + str(gif.checkSize()) + " MB")
+            "SIZE: " + str(filesize) + " MB")
         sys.exit(0)
     # if gatekeeper said he was no good...
     os.remove(os.path.expanduser(gif.path))  # REMOVE HIM
@@ -132,20 +130,20 @@ def Creator(res, style, limit, noaprox, tolerance, skip):
         if noaprox:
             # just try to get our filesize below the limit, screw aproximation
             multiplier = 0.75
-        Creator(int(res*multiplier), style, limit, noaprox, tolerance, skip)
+        creator(int(res*multiplier), style, limit, noaprox, tolerance, skip)
     elif test == 2:
         # so the gatekeeper says our gif is too small...
         print(
             "Your gif is too small (%s MB)." % filesize,
             "I'll try again with a bigger resolution.")
         multiplier = 1+(difference / 10)  # lame algorithm again
-        Creator(int(res*multiplier), style, limit, noaprox, tolerance, skip)
+        creator(int(res*multiplier), style, limit, noaprox, tolerance, skip)
     else:
         # just in case...
-        print(
-            "There must be a problem here.",
-            "Please report a bug having to do with the Creation() function.")
-        sys.exit(1)
+        raise RuntimeError('There was a problem here.',
+                           'The program entered an else clause it is not',
+                           'supposed to \n. Please report a bug with the',
+                           'creator() function.')
 
 
 def run():
@@ -193,7 +191,7 @@ def run():
     parser.add_argument(
         '-na',
         '--noaprox',
-        action="store_true",
+        action="store_true",  # type will be boolean
         help="""Flag. Disables aproximation, thus using LIMIT just a as an upper
              limit instead of using it as a target value. Disabling
              aproximation will make processing faster, but you might end up
@@ -212,23 +210,23 @@ def run():
     noaprox = arguments.noaprox
     tolerance = (100-arguments.tolerance)/100
     skip = (arguments.skip+1)
+    getcontext().prec = 2
     if noaprox:
-        strAprox = 'FALSE'
+        straprox = 'FALSE'
     else:
-        strAprox = 'TRUE'
+        straprox = 'TRUE'
     try:
         glob.glob('*.png')[1]
     except:
-        print("Looks like there are no sufficient PNG files to work here",
-              "I need at least two.")
-        sys.exit(1)
+        raise FileNotFoundError('You need to have at least two PNG files',
+                                'in the current directory.')
     print("Creating a gif for you with the following settings: \n",
           "STYLE: " + style + "\n ",
           "RESOLUTION: " + str(res) + "\n ",
           "SIZE LIMIT: " + str(limit) + "\n ",
           "TOLERANCE: " + str(int(float(tolerance*-100)+100)) + "% \n ",
-          "APROXIMATION IS: " + strAprox)
-    Creator(res, style, limit, noaprox, tolerance, skip)
+          "APROXIMATION IS: " + straprox)
+    creator(res, style, limit, noaprox, tolerance, skip)
 
-
-run()
+if __name__ == '__main__':
+    run()
